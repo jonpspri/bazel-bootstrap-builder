@@ -2,18 +2,17 @@ FROM ubuntu:bionic
 
 SHELL ["/bin/bash", "-ueo", "pipefail", "-c"]
 
+ARG JDK_PACKAGE=adoptopenjdk-11-hotspot
 # hadolint ignore=DL3008
 RUN apt-get update \
  && apt-get install --no-install-recommends -y \
     ca-certificates wget gnupg software-properties-common \
+    build-essential python python3 zip unzip wget \
  && wget -qO - https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public \
  | apt-key add - \
  && add-apt-repository --yes https://adoptopenjdk.jfrog.io/adoptopenjdk/deb/ \
  && apt-get update \
- && apt-get install --no-install-recommends -y \
-    build-essential python python3 zip unzip \
-    adoptopenjdk-11-openj9 \
-#    openjdk-8-jdk-headless wget \
+ && apt-get install --no-install-recommends -y ${JDK_PACKAGE} \
  && rm -rf /var/lib/apt/lists/*
 
 ARG BAZEL_VERSION=2.0.0
@@ -29,7 +28,7 @@ RUN echo "Fetching Bazel ${BAZEL_VERSION}" \
  && rm "./bazel-${BAZEL_VERSION}-dist.zip"
 
 ENV BAZEL_JAVAC_OPTS="-J-Xmx2g -J-Xms500m"
-ENV EXTRA_BAZEL_ARGS="--host_javabase=@local_jdk//:jdk"
+#ENV EXTRA_BAZEL_ARGS="--host_javabase=@local_jdk//:jdk"
 RUN echo "Building Bazel ${BAZEL_VERSION}" \
  && ./compile.sh \
  && echo "Bazel is at /bazel-${BAZEL_VERSION}/output/bazel"
