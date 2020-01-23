@@ -5,7 +5,15 @@ SHELL ["/bin/bash", "-ueo", "pipefail", "-c"]
 # hadolint ignore=DL3008
 RUN apt-get update \
  && apt-get install --no-install-recommends -y \
-    build-essential openjdk-8-jdk-headless python python3 zip unzip wget \
+    ca-certificates wget gnupg software-properties-common \
+ && wget -qO - https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public \
+ | apt-key add - \
+ && add-apt-repository --yes https://adoptopenjdk.jfrog.io/adoptopenjdk/deb/ \
+ && apt-get update \
+ && apt-get install --no-install-recommends -y \
+    build-essential python python3 zip unzip \
+    adoptopenjdk-11-openj9 \
+#    openjdk-8-jdk-headless wget \
  && rm -rf /var/lib/apt/lists/*
 
 ARG BAZEL_VERSION=2.0.0
@@ -17,13 +25,15 @@ ENV GITHUB_DOWNLOAD=https://github.com/bazelbuild/bazel/releases/download
 RUN echo "Fetching Bazel ${BAZEL_VERSION}" \
  && wget -q "${GITHUB_DOWNLOAD}/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-dist.zip" \
  && sha256sum -c <<< "$(grep "${BAZEL_VERSION}" ./sha256sums)" \
- && unzip "./bazel-${BAZEL_VERSION}-dist.zip" \
+ && unzip -q "./bazel-${BAZEL_VERSION}-dist.zip" \
  && rm "./bazel-${BAZEL_VERSION}-dist.zip"
 
+ENV BAZEL_JAVAC_OPTS="-J-Xmx2g -J-Xms500m"
+ENV EXTRA_BAZEL_ARGS="--host_javabase=@local_jdk//:jdk"
 RUN echo "Building Bazel ${BAZEL_VERSION}" \
- && env EXTRA_BAZEL_ARGS="--host_javabase=@local_jdk//:jdk" bash ./compile.sh \
+ && ./compile.sh \
  && echo "Bazel is at /bazel-${BAZEL_VERSION}/output/bazel"
 #  Bazel binary will be at /bazel-${BAZEL_VERSION}/output/bazel
 
-WORKDIR /
-RUN "/bazel-${BAZEL_VERSION}/output/bazel"
+#WORKDIR /
+#RUN "/bazel-${BAZEL_VERSION}/output/bazel"
