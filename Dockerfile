@@ -2,7 +2,7 @@ FROM ubuntu:bionic
 
 SHELL ["/bin/bash", "-ueo", "pipefail", "-c"]
 
-ARG JDK_PACKAGE=adoptopenjdk-11-hotspot
+ARG JDK_PACKAGE=adoptopenjdk-8-hotspot
 # hadolint ignore=DL3008
 RUN apt-get update \
  && apt-get install --no-install-recommends -y \
@@ -27,8 +27,11 @@ RUN echo "Fetching Bazel ${BAZEL_VERSION}" \
  && unzip -q "./bazel-${BAZEL_VERSION}-dist.zip" \
  && rm "./bazel-${BAZEL_VERSION}-dist.zip"
 
+COPY bazel.diff /bazel-${BAZEL_VERSION}/bazel.diff
+RUN patch -p1 < ./bazel.diff
+
 ENV BAZEL_JAVAC_OPTS="-J-Xmx2g -J-Xms500m"
-#ENV EXTRA_BAZEL_ARGS="--host_javabase=@local_jdk//:jdk"
+ENV EXTRA_BAZEL_ARGS="--host_javabase=@local_jdk//:jdk"
 RUN echo "Building Bazel ${BAZEL_VERSION}" \
  && ./compile.sh \
  && echo "Bazel is at /bazel-${BAZEL_VERSION}/output/bazel"
