@@ -19,6 +19,7 @@
  */
 def build_shell='''
 [ -n "${BAZEL_VERSION}" ] || { echo "BAZEL_VERSION undeclared"; exit 16; }
+arch="$(uname -m)"
 
 docker build \
   --build-arg "BAZEL_VERSION=${BAZEL_VERSION}" \
