@@ -16,28 +16,30 @@ index 499288005c..570401da5f 100644
      name = "linux_x86_64",
      values = {"cpu": "k8"},
 diff --git a/third_party/BUILD b/third_party/BUILD
-index b458d521fd..bbbe7b17d6 100644
+index b458d521fd..fe30d1154b 100644
 --- a/third_party/BUILD
 +++ b/third_party/BUILD
-@@ -469,9 +469,7 @@ UNNECESSARY_DYNAMIC_LIBRARIES = select({
+@@ -469,9 +469,9 @@ UNNECESSARY_DYNAMIC_LIBRARIES = select({
      "//src/conditions:arm": "*.so *.jnilib *.dll",
      "//src/conditions:linux_aarch64": "*.so *.jnilib *.dll",
      "//src/conditions:linux_ppc": "*.so *.jnilib *.dll",
--    # Play it safe -- better have a big binary than a slow binary
++    "//src/conditions:linux_s390x": "*.so *.jnilib *.dll",
+     # Play it safe -- better have a big binary than a slow binary
 -    # zip -d does require an argument. Supply something bogus.
 -    "//conditions:default": "*.bogusextension",
-+    "//src/conditions:linux_s390x": "*.so *.jnilib *.dll",
++    "//conditions:default": "",
  })
  
  # Remove native libraries that are for a platform different from the one we are
-@@ -480,7 +478,9 @@ genrule(
+@@ -480,7 +480,10 @@ genrule(
      name = "filter_netty_dynamic_libs",
      srcs = ["netty_tcnative/netty-tcnative-boringssl-static-2.0.24.Final.jar"],
      outs = ["netty_tcnative/netty-tcnative-filtered.jar"],
 -    cmd = "cp $< $@ && zip -qd $@ " + UNNECESSARY_DYNAMIC_LIBRARIES,
 +    cmd = "cp $< $@ && " +
-+      "test -n '" + UNNECESSARY_DYNAMIC_LIBRARIES + "' && " +
-+      "zip -qd $@ " + UNNECESSARY_DYNAMIC_LIBRARIES,
++      # End successfully if there is nothing to be deleted from the archive
++      "if [ -n '" + UNNECESSARY_DYNAMIC_LIBRARIES + "' ]; then " +
++      "zip -qd $@ " + UNNECESSARY_DYNAMIC_LIBRARIES + "; fi",
  )
  
  java_import(
