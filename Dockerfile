@@ -40,5 +40,5 @@ RUN echo "Building Bazel ${BAZEL_VERSION}" \
  && echo "Bazel is at /bazel-${BAZEL_VERSION}/output/bazel"
 #  Bazel binary will be at /bazel-${BAZEL_VERSION}/output/bazel
 
-#WORKDIR /
-#RUN "/bazel-${BAZEL_VERSION}/output/bazel"
+RUN cp "/bazel-${BAZEL_VERSION}/output/bazel" /
+WORKDIR /
